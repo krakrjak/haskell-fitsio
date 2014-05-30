@@ -1,5 +1,3 @@
-> {-# LANGUAGE PArr #-}
-
 Specializes FQL with knowledge of GBT FITS files.  In particular, it
 is aware of the GBT project directory structure, scans and
 instruments, ScanLog directory, and GO FITS files.

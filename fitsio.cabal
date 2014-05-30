@@ -1,5 +1,5 @@
 name:          fitsio
-version:       0.2
+version:       0.3
 stability:     alpha
 synopsis:      A library for reading and writing data files in the FITS data format.
 description:
@@ -22,7 +22,10 @@ library
                    Data.Fits.GBT.Antenna,
                    Data.Fits.GBT.ScanLog,
                    Data.Fits.WCS
-  build-Depends:   base, filepath >= 1.1.0.1, mtl
+  other-modules:   C2HS
+  ghc-options:     -threaded -rtsopts
+  build-Depends:   base >= 4.2.0.0, filepath >= 1.1.0.1, mtl, dph-prim-par
+  build-tools:     c2hs
   extra-libraries: cfitsio, m
   extensions:      ForeignFunctionInterface
   hs-source-dirs:  src/

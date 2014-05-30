@@ -1,5 +1,3 @@
-> {-# LANGUAGE PArr #-}
-
 Encapsulates knowledge of GBT ScanLogs.
 
 > module Data.Fits.GBT.ScanLog where

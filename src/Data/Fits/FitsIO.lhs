@@ -1,11 +1,14 @@
 > {-# LANGUAGE ForeignFunctionInterface #-}
-> {-# INCLUDE "FitsIO.chs.h" #-}
-> {-# OPTIONS -XTypeSynonymInstances #-}
+> {-# OPTIONS_GHC -XTypeSynonymInstances -XFlexibleInstances #-}
 
 > -- | A Haskell wrapper for CFITSIO.  See http://heasarc.nasa.gov/docs/software/fitsio/fitsio.html
 > module Data.Fits.FitsIO where
 
 > import C2HS
+
+
+> import Foreign.C
+> import Foreign.Storable
 > import Control.Monad
 > import Control.Monad.Trans
 > import Data.Char
@@ -226,15 +229,15 @@
 > r4 (a, b, c, d, e) = return (a, (b, c, d, e))
 > 
 > -- | Convert a C int to a status value.
-> cToStatus :: Integral a => a -> Status
-> cToStatus = Status . cIntConv
+> cToStatus :: CInt -> Status
+> cToStatus = Status . fromIntegral
 > 
 > -- | Convert a status value to a C int.
-> cFromStatus :: Integral a => Status -> a
-> cFromStatus = cIntConv . status
+> cFromStatus :: Status -> CInt
+> cFromStatus = fromIntegral . status
 > 
 > -- | Pass a status value as an in/out parameter.
-> withStatusConv :: (Integral a, Storable a) => Status -> (Ptr a -> IO b) -> IO b
+> withStatusConv :: Status -> (Ptr CInt -> IO b) -> IO b
 > withStatusConv = with . cFromStatus
 > 
 > -- | Return a descriptive text string (30 char max.) corresponding to
@@ -424,15 +427,15 @@
 > -- (where the primary array = 1). This function returns the Hdu number
 > -- rather than a status value.
 > 
-> getHduNum :: FitsFile -> FitsIO Int
+> getHduNum :: FitsFile -> FitsIO CInt
 > getHduNum = liftIO . getHduNum'
 > 
-> getHduNum' :: FitsFile -> IO (Int)
+> getHduNum' :: FitsFile -> IO (CInt)
 > getHduNum' a1 =
 >   withFitsFile a1 $ \a1' -> 
 >   alloca $ \a2' -> 
 >   getHduNum''_ a1' a2' >>= \res ->
->   let {res' = cIntConv res} in
+>   let {res' = res} in
 >   return (res')
 > 
 > -- | Return the type of the current Hdu in the FITS file. The possible
@@ -452,10 +455,10 @@
 >   return (res', a2'')
 > 
 > movAbsHdu = f2 movAbsHdu_
-> movAbsHdu_ :: FitsFile -> Int -> Status -> IO (Status, HduType)
+> movAbsHdu_ :: FitsFile -> CInt -> Status -> IO (Status, HduType)
 > movAbsHdu_ a1 a2 a4 =
 >   withFitsFile a1 $ \a1' -> 
->   let {a2' = cIntConv a2} in 
+>   let {a2' =  a2} in 
 >   alloca $ \a3' -> 
 >   withStatusConv a4 $ \a4' -> 
 >   movAbsHdu_'_ a1' a2' a3' a4' >>= \res ->
@@ -463,13 +466,13 @@
 >   let {res' = cToStatus res} in
 >   return (res', a3'')
 > 
-> movRelHdu :: FitsFile -> Int -> FitsIO HduType
+> movRelHdu :: FitsFile -> CInt -> FitsIO HduType
 > movRelHdu = f2 movRelHdu'
 > 
-> movRelHdu' :: FitsFile -> Int -> Status -> IO (Status, HduType)
+> movRelHdu' :: FitsFile -> CInt -> Status -> IO (Status, HduType)
 > movRelHdu' a1 a2 a4 =
 >   withFitsFile a1 $ \a1' -> 
->   let {a2' = cIntConv a2} in 
+>   let {a2' = a2} in 
 >   alloca $ \a3' -> 
 >   withStatusConv a4 $ \a4' -> 
 >   movRelHdu''_ a1' a2' a3' a4' >>= \res ->
@@ -477,17 +480,17 @@
 >   let {res' = cToStatus res} in
 >   return (res', a3'')
 > 
-> movNamHdu              :: FitsFile -> HduType -> String -> Int -> FitsIO ()
+> movNamHdu              :: FitsFile -> HduType -> String -> CInt -> FitsIO ()
 > movNamHdu f t name ver = FitsIO $ \s -> do
 >     s' <- movNamHdu_ f t name ver s
 >     return (s, ())
 > 
-> movNamHdu_ :: FitsFile -> HduType -> String -> Int -> Status -> IO Status
+> movNamHdu_ :: FitsFile -> HduType -> String -> CInt -> Status -> IO Status
 > movNamHdu_ a1 a2 a3 a4 a5 =
 >   withFitsFile a1 $ \a1' -> 
 >   let {a2' = cFromEnum a2} in 
 >   withCString a3 $ \a3' -> 
->   let {a4' = cIntConv a4} in 
+>   let {a4' = a4} in 
 >   withStatusConv a5 $ \a5' -> 
 >   movNamHdu_'_ a1' a2' a3' a4' a5' >>= \res ->
 >   let {res' = cToStatus res} in

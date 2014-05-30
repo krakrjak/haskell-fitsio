@@ -1,5 +1,3 @@
-> {-# LANGUAGE PArr #-}
-
 This module brings the FITS Query Language (FQL) to Haskell.  Where
 FitsIO is a low-level interface to data stored in FITS files---it's
 just a wrapper around the CFITSIO library---FQL attempts to provide a
@@ -9,7 +7,7 @@ high-level interface that abstracts away much of the tedium.
 
 > import Control.Monad.Reader
 > import Data.Fits.FitsIO
-> import GHC.PArr
+> import Data.Array.Parallel.Unlifted
 
 The FQL monad couples FitsIO with a simple computational environment.
 
@@ -67,7 +65,7 @@ long as they contain the data we're looking for.
 Move to the desired Header/Data Unit.
   
 > openHDU     :: FQLEnv env => HDU -> FQL env ()
-> openHDU hdu = fits >>= \f -> lift $ movNamHdu f typ name version
+> openHDU hdu = fits >>= \f -> lift $ movNamHdu f typ name (fromIntegral version)
 >   where
 >     HDU { hduName = name, hduType = typ, hduVersion = version } = hdu
 
@@ -78,8 +76,8 @@ Move to the desired Header/Data Unit specified by name only.
 
 Read the full contents of the named column into a parallel array.
 
-> column :: (FQLEnv env, FitsValue a) => String -> FQL env [:a:]
-> column = fmap toP . column'
+> column :: (FQLEnv env, FitsValue a, Elt a) => String -> FQL env (Array a)
+> column = fmap fromList . column'
 
 > column'      :: (FQLEnv env, FitsValue a) => String -> FQL env [a]
 > column' name = fits >>= \f -> do

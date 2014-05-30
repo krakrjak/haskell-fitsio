@@ -1,5 +1,3 @@
-> {-# LANGUAGE PArr #-}
-
 Encapsulates knowledge of GBT Antenna FITS.
 
 > module Data.Fits.GBT.Antenna where
@@ -7,9 +5,9 @@ Encapsulates knowledge of GBT Antenna FITS.
 > import Data.Fits.FitsIO
 > import Data.Fits.FQL
 > import Data.Fits.GBT
-> import GHC.PArr
+> import Data.Array.Parallel.Unlifted
 
-> columns       :: FitsValue a => [String] -> GBT [[:a:]]
+> columns       :: (FitsValue a, Elt a) => [String] -> GBT [Array a]
 > columns names = with "ANTENNA" $ do
 >     namedHDU "ANTPOSGR" <|> namedHDU "ANTPOSPF"
 >     mapM column $ names
